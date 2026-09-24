@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNS Simulator</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --border-color: #eff3f4;
+      --text-color: #0f1419;
+      --sub-text: #536471;
+      --primary-color: #1d9bf0;
+      --hover-bg: #f7f9f9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f7f9f9;
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background-color: var(--bg-color);
+      border-left: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ヘッダー */
+    header {
+      position: sticky;
+      top: 0;
+      background-color: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      font-weight: bold;
+      font-size: 18px;
+      z-index: 10;
+    }
+
+    /* スタート画面 */
+    .intro-container {
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .intro-card {
+      background-color: #f0f8ff;
+      border: 1px solid #bfe3fc;
+      border-radius: 12px;
+      padding: 20px;
+      line-height: 1.7;
+      font-size: 15px;
+      color: var(--text-color);
+    }
+
+    .start-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 24px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s, opacity 0.2s;
+    }
+
+    .start-btn:disabled {
+      background-color: #9cd4fb;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .start-btn:not(:disabled):hover {
+      opacity: 0.9;
+    }
+
+    /* 投稿カード共通 */
+    .post {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 12px;
+      transition: background-color 0.2s;
+    }
+
+    .post:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #ccc;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+    }
+
+    .post-content {
+      flex: 1;
+    }
+
+    .post-header {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .user-name {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .user-handle, .post-time {
+      color: var(--sub-text);
+      font-size: 14px;
+    }
+
+    .post-text {
+      font-size: 15px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    /* 返信リスト */
+    .replies-container {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .reply-item {
+      font-size: 13px;
+      color: var(--sub-text);
+      margin-top: 4px;
+      background-color: #f7f9f9;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+    .reply-item span {
+      font-weight: bold;
+      color: var(--text-color);
+    }
+
+    /* コメント入力エリア */
+    .comment-input-box {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .comment-input {
+      flex: 1;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .comment-input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .comment-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .comment-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* 選択モード用フォーム */
+    .quiz-container {
+      padding: 16px;
+    }
+
+    .question-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: var(--primary-color);
+    }
+
+    .options-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .option-btn {
+      background-color: #ffffff;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      padding: 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .option-btn:hover {
+      background-color: rgba(29, 155, 240, 0.1);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header id="header">はじめに</header>
+
+  <!-- 0. スタート（案内）フェーズ -->
+  <div id="intro-phase" class="intro-container">
+    <div class="intro-card">
+      正直な意見を求めているのでわざわざ優しくなる必要はないです。これから出てくる投稿について思ったことと近いほうを正直に選択してください。回答は匿名性になっているので誰がどっちを選んだのかはわかりません。
+    </div>
+    <button class="start-btn" id="btn-start" disabled>準備中... (2秒お待ちください)</button>
+  </div>
+
+  <!-- 1. クイズ（選択）フェーズ -->
+  <div id="quiz-phase" class="quiz-container hidden">
+    <div class="question-title" id="quiz-step-title">質問 1</div>
+    <div class="post" style="border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 16px;">
+      <div class="avatar" id="quiz-avatar">A</div>
+      <div class="post-content">
+        <div class="post-header">
+          <span class="user-name" id="quiz-user-name">ユーザー</span>
+          <span class="user-handle" id="quiz-user-handle">@user</span>
+        </div>
+        <div class="post-text" id="quiz-post-text">投稿内容</div>
+      </div>
+    </div>
+
+    <p style="font-weight: bold; font-size: 14px; margin-bottom: 8px;">投稿に対するあなたの返信を選択してください：</p>
+    <div class="options-box">
+      <button class="option-btn" id="btn-option-a">A: 選択肢A</button>
+      <button class="option-btn" id="btn-option-b">B: 選択肢B</button>
+      <button class="option-btn" id="btn-option-c">C: (空白)</button>
+    </div>
+  </div>
+
+  <!-- 2. タイムラインフェーズ -->
+  <div id="timeline-phase" class="hidden">
+    <div id="timeline-posts"></div>
+  </div>
+</div>
+
+<script>
+  // 1. 選択フェーズ用の5つの投稿データ（optionCを追加）
+  const quizData = [
+    {
+      user: "正直者",
+      handle: "@no8wj98h",
+      avatar: "🐶",
+      text: "やっぱりあの芸能人は嫌いだな、あんなに人気が最高潮だったのに熱愛出るとか終わってる。ファンのこと嫌いなの見え見え。",
+      question: "どのコメントをする？",
+      optionA: "公開アカウントで人の悪口言うなよ。あれは本人がデマだって言ってるんだからデマなのわかんないの？ネットやめたほうがいいよ",
+      optionB: "本人がデマだって言ってるのでむやみに信じるのはやめたほうがいいと思います。本当かもわからないこと広めるなんて最低です。",
+      optionC: "（空白）"
+    },
+    {
+      user: "ゆら@ボカロP AIじゃないです",
+      handle: "@YuLa_0825",
+      avatar: "🎵",
+      text: "新曲投稿しました‼なぜかめちゃくちゃAIといわれているんですがAIってなんですか？2026年に生きててAI知らないってやばいんですか？AI利用？はしてません....https://www.youtube.com/watch?v=1234567890",
+      question: "どのコメントをする？",
+      optionA: "使ってないのなら証拠を出してください!明らかにサムネもAIじゃないですか？",
+      optionB: "本人が使っていないと言っているのにそんなこと聞く人がいるんですか!?そいつら〆てやりましょうか（笑）",
+      optionC: "（空白）"
+    },
+    {
+      user: "斜逐",
+      handle: "@shachiku_1205",
+      avatar: "🖥",
+      text: "やっぱり人間は金がないと生きていけないんだよな。愛とか言ってるやつはまじでどういう思考なのか理解できない。愛があるから人間は生きてるとかそんなものあるわけないに決まってんだろ。",
+      question: "どのコメントをする？",
+      optionA: "いや金なわけねえだろ頭腐ってんの？愛があるから人間は生きてるんだよ知らんのか？愛がなければここまで子孫増えなかったし、愛がなければ人間は生きていけないんだよ。金があるから生きてるとかそんなのはただの物欲だろ。",
+      optionB: "それな金がないと結局生きて行けねえんだよな。愛とかいってるやつは一回人生やり直したほうがいいだろ。そんなぽやぽや頭だから人生つまんないんだよ",
+      optionC: "（空白）"
+    },
+    {
+      user: "𝒩𝒶𝓃𝒶 ໒꒱˚.*",
+      handle: "@U._.U",
+      avatar: "🎀",
+      text: "今日アフヌン行ってきたんだけど多すぎて半分も食べきれなかった( ´•̥ω•̥` )でもかわいい写真取れたからちょっとしか食べてなくても許される？わたしかわいいし、、、、",
+      question: "どのコメントをする？",
+      optionA: "ななちゃんは可愛い写真が撮れれば満足なタイプなんだね。食べ物を残すことより思い出が大事って割り切れるの、正直羨ましいよ。私はなんでも気になっちゃうタイプだから、、、",
+      optionB: "そんなに食べられないなら最初から頼む量を減らせばよかったのに。写真はスマホ上で捨てるだけだから何もないけど食べ物は無駄になった。その重さ考えてる？",
+      optionC: "（空白）"
+    },
+    {
+      user: "みゆママ",
+      handle: "@miyumama_0315",
+      avatar: "🪭",
+      text: "最近うちの娘が化粧用品を勝手にお小遣いで買ってきて妙に色気づいていたのでお金とその化粧品を没収しました。男に媚び売るような子に育てた覚えはないのになんで、、、やっぱりもっと厳しくしたほうがいいのでしょうか。",
+      question: "どのコメントをする？",
+      optionA: "高校生なんてメイクするのが当たり前だし、メイク用品を買うのも普通のこと。最低限に身だしなみのために必要だってわからないの？お前の育て方のせいで娘さんが本当にかわいそうだよwww",
+      optionB: "それな、高校生がそんなに化粧する必要あるのか？俺の同級生たちは高校生で化粧してるやつなんていなかったぞ。化粧は必要だとか当たり前だとか言ってるやつの気がしれんわ。",
+      optionC: "（空白）"
+    }
+  ];
+
+  // 2. 自動生成される日常・イベント投稿データ
+  const randomPostsPool = [
+    { user: "ランチbot", handle: "@lunch_bot", avatar: "🍱", text: "今日のランチはハンバーグ定食に決定！" },
+    { user: "山田の城公式☑", handle: "@game_official", avatar: "⚔️", text: "【イベント終了告知】期間限定イベント「夏の陣」は本日15:00をもって終了いたしました。ご参加ありがとうございました！" },
+    { user: "たろう", handle: "@taro_123", avatar: "🐶", text: "今日めちゃくちゃ天気いいから散歩行ってきた！" },
+    { user: "トレンド速報", handle: "@trend_news", avatar: "📰", text: "【話題】新作アニメのPVが公開され、SNSで大きな反響を呼んでいます。" },
+    { user: "ねこすき", handle: "@cat_life", avatar: "🐱", text: "うちの猫がずっと寝てる...かわいすぎる..." },
+    { user: "サマフェス公☑", handle: "@live_staff", avatar: "🎤", text: "【お知らせ】本日の公演はすべて無事に終了いたしました。お気をつけてお帰りください。" }
+  ];
+
+  // 他ユーザーの自動返信プール
+  const otherRepliesPool = [
+    "それめっちゃわかります！",
+    "自分も同じ意見です！",
+    "へー、そうなんですね！",
+    "今日もお疲れ様です！",
+    "最高すぎます👍"
+  ];
+
+  // 状態管理
+  let currentQuizIndex = 0;
+  let timelinePosts = [];
+
+  // DOM要素
+  const header = document.getElementById("header");
+  const introPhase = document.getElementById("intro-phase");
+  const quizPhase = document.getElementById("quiz-phase");
+  const timelinePhase = document.getElementById("timeline-phase");
+  const btnStart = document.getElementById("btn-start");
+
+  const quizStepTitle = document.getElementById("quiz-step-title");
+  const quizAvatar = document.getElementById("quiz-avatar");
+  const quizUserName = document.getElementById("quiz-user-name");
+  const quizUserHandle = document.getElementById("quiz-user-handle");
+  const quizPostText = document.getElementById("quiz-post-text");
+  const btnOptionA = document.getElementById("btn-option-a");
+  const btnOptionB = document.getElementById("btn-option-b");
+  const btnOptionC = document.getElementById("btn-option-c");
+
+  const timelinePostsContainer = document.getElementById("timeline-posts");
+
+  // タイマー処理（2秒後にスタートボタン有効化）
+  setTimeout(() => {
+    btnStart.disabled = false;
+    btnStart.textContent = "次へ進む";
+  }, 2000);
+
+  // 「次へ」ボタンクリックでクイズ開始
+  btnStart.addEventListener("click", () => {
+    introPhase.classList.add("hidden");
+    quizPhase.classList.remove("hidden");
+    loadQuiz(currentQuizIndex);
+  });
+
+  // クイズ読み込み関数
+  function loadQuiz(index) {
+    const data = quizData[index];
+    header.textContent = `ステップ ${index + 1}/5：質問に答えてコメントしよう`;
+    quizStepTitle.textContent = `質問 ${index + 1}: ${data.question}`;
+    quizAvatar.textContent = data.avatar;
+    quizUserName.textContent = data.user;
+    quizUserHandle.textContent = data.handle;
+    quizPostText.textContent = data.text;
+    btnOptionA.textContent = `A: ${data.optionA}`;
+    btnOptionB.textContent = `B: ${data.optionB}`;
+    btnOptionC.textContent = `C: ${data.optionC}`;
+  }
+
+  // 選択肢クリック時の処理
+  function handleOptionSelect(selectedOptionText) {
+    const data = quizData[currentQuizIndex];
+    
+    // (空白)以外が選ばれた場合のみ返信リストにユーザーのコメントを追加
+    const replies = [];
+    if (selectedOptionText !== "（空白）") {
+      replies.push({ user: "あなた", handle: "@my_account", text: selectedOptionText });
+    }
+
+    // タイムライン用に投稿を保持
+    timelinePosts.push({
+      id: "post-" + Date.now() + "-" + Math.random(),
+      user: data.user,
+      handle: data.handle,
+      avatar: data.avatar,
+      text: data.text,
+      time: "1分前",
+      replies: replies
+    });
+
+    currentQuizIndex++;
+
+    if (currentQuizIndex < quizData.length) {
+      loadQuiz(currentQuizIndex);
+    } else {
+      // 5つの質問完了 -> タイムライン移行
+      startTimelinePhase();
+    }
+  }
+
+  btnOptionA.addEventListener("click", () => handleOptionSelect(quizData[currentQuizIndex].optionA));
+  btnOptionB.addEventListener("click", () => handleOptionSelect(quizData[currentQuizIndex].optionB));
+  btnOptionC.addEventListener("click", () => handleOptionSelect(quizData[currentQuizIndex].optionC));
+
+  // タイムライン開始
+  function startTimelinePhase() {
+    quizPhase.classList.add("hidden");
+    timelinePhase.classList.remove("hidden");
+    header.textContent = "ホーム";
+
+    // 最初にいくつかの日常投稿を追加
+    randomPostsPool.slice(0, 2).forEach(p => {
+      timelinePosts.push({
+        id: "post-" + Date.now() + "-" + Math.random(),
+        user: p.user,
+        handle: p.handle,
+        avatar: p.avatar,
+        text: p.text,
+        time: "たった今",
+        replies: []
+      });
+    });
+
+    renderTimeline();
+
+    // 2秒ごとに自動更新
+    setInterval(autoUpdateTimeline, 2000);
+  }
+
+  // タイムライン描画
+  function renderTimeline() {
+    timelinePostsContainer.innerHTML = "";
+
+    timelinePosts.forEach(post => {
+      const postEl = document.createElement("div");
+      postEl.className = "post";
+
+      const repliesHTML = post.replies.map(r => `
+        <div class="reply-item">
+          <span>${r.user}</span> (${r.handle}): ${r.text}
+        </div>
+      `).join("");
+
+      postEl.innerHTML = `
+        <div class="avatar">${post.avatar}</div>
+        <div class="post-content">
+          <div class="post-header">
+            <span class="user-name">${post.user}</span>
+            <span class="user-handle">${post.handle}</span>
+            <span class="post-time">・ ${post.time}</span>
+          </div>
+          <div class="post-text">${post.text}</div>
+
+          <div class="replies-container">
+            ${repliesHTML}
+            <div class="comment-input-box">
+              <input type="text" class="comment-input" placeholder="返信をツイート" id="input-${post.id}">
+              <button class="comment-btn" onclick="addComment('${post.id}')">返信</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      timelinePostsContainer.appendChild(postEl);
+    });
+  }
+
+  // 手動でコメントを追加
+  window.addComment = function(postId) {
+    const inputEl = document.getElementById(`input-${postId}`);
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    const post = timelinePosts.find(p => p.id === postId);
+    if (post) {
+      post.replies.push({
+        user: "あなた",
+        handle: "@my_account",
+        text: text
+      });
+      renderTimeline();
+    }
+  };
+
+  // 2秒に一回の自動更新処理
+  function autoUpdateTimeline() {
+    const rand = Math.random();
+
+    if (rand < 0.5 && timelinePosts.length > 0) {
+      const targetPost = timelinePosts[Math.floor(Math.random() * timelinePosts.length)];
+      const randomReply = otherRepliesPool[Math.floor(Math.random() * otherRepliesPool.length)];
+      const randomUserNum = Math.floor(Math.random() * 900) + 100;
+
+      targetPost.replies.push({
+        user: `ユーザー${randomUserNum}`,
+        handle: `@user_${randomUserNum}`,
+        text: randomReply
+      });
+    } else {
+      const newPostData = randomPostsPool[Math.floor(Math.random() * randomPostsPool.length)];
+      timelinePosts.unshift({
+        id: "post-" + Date.now() + "-" + Math.random(),
+        user: newPostData.user,
+        handle: newPostData.handle,
+        avatar: newPostData.avatar,
+        text: newPostData.text,
+        time: "たった今",
+        replies: []
+      });
+    }
+
+    renderTimeline();
+  }
+</script>
+
+</body>
+</html>
